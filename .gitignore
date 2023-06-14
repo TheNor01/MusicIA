@@ -163,3 +163,4 @@ cython_debug/
 #resources
 
 ./resources/archive/Data/genres_original/*/*
+resources/archive/Data/genres_original/*/*.wav
