@@ -28,3 +28,7 @@ Spettro creato cosi, asse X abbiamo time, asse Y hz frequenze.
 4 canali RGB + opacità intensità decibel
 
 pip3 install torch torchvision torchaudio
+
+
+tensorboard 
+torch
