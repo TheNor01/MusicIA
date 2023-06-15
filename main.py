@@ -13,7 +13,8 @@ from bin.code.models import LeNetColor
 from torch.utils.data import DataLoader
 from PIL import ImageChops,Image
 from bin.code.loaders import ScenesDataset
-from bin.code.metrics_eval import train_classifier
+from bin.code.metrics_eval import train_classifier,test_classifier
+from sklearn.metrics import accuracy_score
 
 
 #image analysis
@@ -190,12 +191,23 @@ if __name__ == '__main__':
 
 
     lenetModel = LeNetColor()
-    train_dataset = DataLoader(dataset_train,batch_size=4,num_workers=0,shuffle=True)
-    test_dataset = DataLoader(dataset_test,batch_size=4,num_workers=0,shuffle=2)
+    train_dataset = DataLoader(dataset_train,batch_size=3,num_workers=0,shuffle=True)
+    test_dataset = DataLoader(dataset_test,batch_size=3,num_workers=0,shuffle=2)
 
 
     for i_batch, sample_batched in enumerate(train_dataset):
         print(i_batch, sample_batched['image'].size())
 
 
-    lenet_mnist = train_classifier(lenetModel, train_dataset,test_dataset, 'lenet_mnist', epochs = 10)
+    lenet_mnist = train_classifier(lenetModel, train_dataset,test_dataset, 'lenet_mnist', epochs = 100)
+
+
+    lenet_cifar100_train_predictions, cifar100_labels_train = test_classifier(lenetModel,train_dataset)
+
+    lenet_cifar100_test_predictions, cifar100_labels_test = test_classifier(lenetModel,test_dataset)
+
+    print("Accuracy train LeNetColor: %0.2f" % accuracy_score(cifar100_labels_train,lenet_cifar100_train_predictions))
+    print("Accuracy test LeNetColor: %0.2f" % accuracy_score(cifar100_labels_test,lenet_cifar100_test_predictions))
+
+
+    #improve cnn
