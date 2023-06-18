@@ -246,3 +246,6 @@ if __name__ == '__main__':
 
     print("Accuracy train Alex: %0.2f" % accuracy_score(alex_labels_train,alex_train_predictions))
     print("Accuracy train Alex: %0.2f" % accuracy_score(alex_labels_test,alex_test_predictions))
+
+
+    #what if we increase samples training?
