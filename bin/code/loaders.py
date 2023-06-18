@@ -21,13 +21,13 @@ class ScenesDataset(Dataset):
     
     def __init__(self,base_path,txt_list,transform=None):
      
-    #conserviamo il path alla cartella contenente le immagini
+        #conserviamo il path alla cartella contenente le immagini
         self.base_path=base_path
-    #carichiamo la lista dei file
+        #carichiamo la lista dei file
         #sarà una matrice con n righe (numero di immagini) e 2 colonne (path, etichetta)
         self.images = np.loadtxt(txt_list,dtype=str,delimiter=',')
 
-        print(self.images.size)
+        print("Images loader :"+ str(self.images.size))
         #conserviamo il riferimento alla trasformazione da applicare
         self.transform = transform
 

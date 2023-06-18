@@ -25,14 +25,14 @@ class AverageValueMeter():
             return None
 
 
-def train_classifier(model, train_loader, test_loader, exp_name='experiment',lr=0.001, epochs=100, momentum=0.99):
+def train_classifier(model, train_loader, test_loader, exp_name='experiment',lr=0.001, epochs=100, momentum=0.9):
     criterion = nn.CrossEntropyLoss() 
     optimizer = SGD(model.parameters(), lr, momentum=momentum) 
     #meters
     loss_meter = AverageValueMeter()
     acc_meter = AverageValueMeter()
     #writer
-    writer = SummaryWriter("./logs/metrics/")
+    writer = SummaryWriter("./logs/metrics/"+str(exp_name))
     #device
     device = "cpu"
     model.to(device)
@@ -78,7 +78,7 @@ def train_classifier(model, train_loader, test_loader, exp_name='experiment',lr=
         
 
         #conserviamo i pesi del modello alla fine di un ciclo di training e test
-        torch.save(model.state_dict(),'%s-%d.pth'%(exp_name,e+1))
+        torch.save(model.state_dict(),'./resources/archive/stored/models/'+str(exp_name)+"_"+str(e)+".pth")
     return model
 
 
