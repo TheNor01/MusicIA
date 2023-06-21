@@ -12,11 +12,12 @@ import os
 from bin.code.models import LeNetColor,MiniAlexNet
 from torch.utils.data import DataLoader
 from PIL import ImageChops,Image
-from bin.code.loaders import ScenesDataset
+from bin.code.loaders import ImagesDataset
 from bin.code.metrics_eval import train_classifier,test_classifier
 from sklearn.metrics import accuracy_score
 import splitfolders
 import calendar
+from sklearn.metrics import confusion_matrix
 import time
 
 
@@ -62,9 +63,7 @@ if __name__ == '__main__':
         #if os.path.exists(songs_train_test+"train.txt"):
         #    os.remove(songs_train_test+"train.txt")
             
-
-
-        train = open(songs_train_test+"train.txt", "a")  # append mode
+        fullDs = open(songs_train_test+"fullDs.txt", "a")  # append mode
 
 
         #Resize according to size 
@@ -97,33 +96,23 @@ if __name__ == '__main__':
                 img = Image.open(path[0]+"/"+file)
                 #print(img.shape) #(288, 432, 4)  , 4 canali, 288x432
                 print(img.size)
-                #plt.imshow(image)
 
-                #img.show()
-
-                #plt.imshow(image.squeeze(),cmap='gray')
-                #plt.title(category)
-                #plt.show()
-                #print(convert_tensor(img))
-                #tensor = transform(img)
-                #print(im_ts)
 
                 im_trimmed = trim(img)
                 new_image = im_trimmed.resize((size, size))
                 new_image.save(transformedData+"/"+category+"/"+file)
 
-                im_ts = torch.from_numpy(np.array(new_image))
-                #print(np.array(new_image)[0])
             
-                #print(im_ts.shape)
+                im_ts = torch.from_numpy(np.array(new_image))
+            
 
                 fileLabels.append(file)
                 tensorsLabels.append(im_ts)
                 categoryLabels.append(category)
 
-                train.write(file+","+category+"\n")
+                fullDs.write(category+"/"+file+","+category+"\n")
 
-        train.close()
+        fullDs.close()
         dfSongs = pd.DataFrame(list(zip(fileLabels, tensorsLabels,categoryLabels)),
                     columns =['file', 'tensor','label'])
         
@@ -132,11 +121,10 @@ if __name__ == '__main__':
 
         print(dfSongs)
 
-        splitfolders.ratio("./resources/archive/Data/images_transformed_"+str(size), output="./resources/archive/Data/",seed=1337, ratio=(.8, .1, .1), group_prefix=None, move=False) # default values
+        splitfolders.ratio("./resources/archive/Data/images_transformed_"+str(size), output="./resources/archive/Data/",seed=1337, ratio=(.7, .2, .1), group_prefix=None, move=False) # default values
 
 
-    dataset = ScenesDataset('./resources/archive/Data/images_transformed_'+str(size),'./resources/archive/Data/songs_train_test/train.txt',transform=transforms.ToTensor())
-
+    dataset = ImagesDataset('./resources/archive/Data/images_transformed_'+str(size),'./resources/archive/Data/songs_train_test/fullDs.txt',transform=transforms.ToTensor())
 
     sample = dataset[0]
     print(sample['image'].shape)
@@ -156,12 +144,10 @@ if __name__ == '__main__':
     m = np.zeros(3)
     print(m)
     for sample in dataset:
-        m+=sample['image'].sum(1).sum(1).numpy() #accumuliamo la somma dei pixel canale per canale
+        m+=sample['image'].sum(1).sum(1).numpy() 
 
-    #dividiamo per il numero di immagini moltiplicato per il numero di pixel
     m=m/(len(dataset)*size*size)
     
-    #procedura simile per calcolare la deviazione standard
     s = np.zeros(3)
     for sample in dataset:
         s+=((sample['image']-torch.Tensor(m).view(3,1,1))**2).sum(1).sum(1).numpy()
@@ -176,7 +162,6 @@ if __name__ == '__main__':
 
     transform = transforms.Compose([transforms.ToTensor(),
                                     transforms.Normalize(m,s),
-                                    #transforms.Lambda(lambda x: x.view(-1))
                                     ])
 
 
@@ -191,8 +176,6 @@ if __name__ == '__main__':
             trainTxt.write(category+"/"+file+","+category+"\n")
 
 
-
-
     for (dir_path, dir_names, file_names) in os.walk('./resources/archive/Data/val'):
         category = os.path.basename(dir_path)
         for file in file_names:
@@ -203,8 +186,12 @@ if __name__ == '__main__':
     trainTxt.close()
     valTxt.close()
 
-    dataset_train = ScenesDataset('./resources/archive/Data/train','./resources/archive/Data/songs_train_test/train_loader.txt',transform=transform)
-    dataset_test = ScenesDataset('./resources/archive/Data/val','./resources/archive/Data/songs_train_test/val_loader.txt',transform=transform)
+    dataset_train = ImagesDataset('./resources/archive/Data/train','./resources/archive/Data/songs_train_test/train_loader.txt',transform=transform)
+    dataset_test = ImagesDataset('./resources/archive/Data/val','./resources/archive/Data/songs_train_test/val_loader.txt',transform=transform)
+
+
+    print(len(dataset_train))
+    print(len(dataset_test))
 
 
     print(dataset_train[0]['image'].shape)
@@ -214,32 +201,44 @@ if __name__ == '__main__':
     print(dataset_test[0]['label'])
 
 
-    lenetModel = LeNetColor(sizeInput=size,outChannels=16)
     train_dataset = DataLoader(dataset_train,batch_size=32,num_workers=0,shuffle=True)
     test_dataset = DataLoader(dataset_test,batch_size=32,num_workers=0,shuffle=2)
-
-
-    for i_batch, sample_batched in enumerate(train_dataset):
-        print(i_batch, sample_batched['image'].size())
-
 
     current_GMT = time.gmtime()
 
     # ts stores timestamp
     ts = calendar.timegm(current_GMT)
     print("Current timestamp:", ts)
-    lenet_mnist = train_classifier(lenetModel, train_dataset,test_dataset, exp_name=str(ts)+"_color", epochs = 200,lr=0.001,momentum=0.5)
 
-    lenet_cifar100_train_predictions, cifar100_labels_train = test_classifier(lenet_mnist,train_dataset)
-    lenet_cifar100_test_predictions, cifar100_labels_test = test_classifier(lenet_mnist,test_dataset)
-
-    print("Accuracy train LeNetColor: %0.2f" % accuracy_score(cifar100_labels_train,lenet_cifar100_train_predictions))
-    print("Accuracy test LeNetColor: %0.2f" % accuracy_score(cifar100_labels_test,lenet_cifar100_test_predictions))
+    """
+    lenetModel = LeNetColor(sizeInput=size,outChannels=16)
 
 
+    for i_batch, sample_batched in enumerate(train_dataset):
+        print(i_batch, sample_batched['image'].size())
+
+
+    lenet_mnist = train_classifier(lenetModel, train_dataset,test_dataset, exp_name=str(ts)+"_color", epochs = 400,lr=0.01,momentum=0.9)
+
+
+    torch.save(lenet_mnist.state_dict(), "./resources/archive/stored/models/"+"leNet.pth")
+
+    lenet_train_predictions, cifar100_labels_train = test_classifier(lenet_mnist,train_dataset)
+    lenet_test_predictions, cifar100_labels_test = test_classifier(lenet_mnist,test_dataset)
+
+    print("Accuracy train LeNetColor: %0.2f" % accuracy_score(cifar100_labels_train,lenet_train_predictions))
+    print("Accuracy test LeNetColor: %0.2f" % accuracy_score(cifar100_labels_test,lenet_test_predictions))
+
+    """
+    
     #improve cnn
     miniAlex = MiniAlexNet(outChannels=16)
-    alex_mnist = train_classifier(miniAlex, train_dataset,test_dataset, exp_name=str(ts)+"_alex", epochs = 100,lr=0.01)
+    alex_mnist = train_classifier(miniAlex, train_dataset,test_dataset, exp_name=str(ts)+"_alex", epochs = 400,lr=0.001)
+
+
+    torch.save(alex_mnist.state_dict(), "./resources/archive/stored/models/"+"miniAlex.pth")
+
+
     alex_train_predictions, alex_labels_train = test_classifier(alex_mnist,train_dataset)
     alex_test_predictions, alex_labels_test = test_classifier(alex_mnist,test_dataset)
 
@@ -247,5 +246,7 @@ if __name__ == '__main__':
     print("Accuracy train Alex: %0.2f" % accuracy_score(alex_labels_train,alex_train_predictions))
     print("Accuracy train Alex: %0.2f" % accuracy_score(alex_labels_test,alex_test_predictions))
 
+    confusion_matrix(alex_labels_test, alex_test_predictions)
+    #what if we increase samples training? overfittin is here
+    
 
-    #what if we increase samples training?

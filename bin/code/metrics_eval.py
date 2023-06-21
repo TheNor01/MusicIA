@@ -32,7 +32,7 @@ def train_classifier(model, train_loader, test_loader, exp_name='experiment',lr=
     loss_meter = AverageValueMeter()
     acc_meter = AverageValueMeter()
     #writer
-    writer = SummaryWriter("./logs/metrics/"+str(exp_name))
+    writer = SummaryWriter("./logs/metrics/"+str(exp_name)+"_lr."+str(lr)+"_e."+str(epochs))
     #device
     device = "cpu"
     model.to(device)
@@ -78,7 +78,7 @@ def train_classifier(model, train_loader, test_loader, exp_name='experiment',lr=
         
 
         #conserviamo i pesi del modello alla fine di un ciclo di training e test
-        torch.save(model.state_dict(),'./resources/archive/stored/models/'+str(exp_name)+"_"+str(e)+".pth")
+        #torch.save(model.state_dict(),'./resources/archive/stored/models/'+str(exp_name)+"_"+str(e)+".pth")
     return model
 
 

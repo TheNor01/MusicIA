@@ -11,23 +11,22 @@ class LeNetColor(nn.Module):
         return ((W-K+2*P)/S)+1
 
 
-    def __init__(self,sizeInput,outChannels):
+    def __init__(self,outChannels):
         super(LeNetColor, self).__init__() 
         self.feature_extractor = nn.Sequential(
-            nn.Conv2d(3,int(outChannels),kernel_size=3,stride=1,padding=1), # input  3 x 100  x 100 --> outChannels x calculateOutputImage x calculateOutputImage
-            nn.MaxPool2d(2), #outChannels x calculateOutputImage x calculateOutputImage -> outChannels x  calculateOutputImage/2 x calculateOutputImage/2
+            nn.Conv2d(3,int(outChannels),kernel_size=3,stride=1,padding=1),
+            nn.AvgPool2d(2), 
             nn.ReLU(),
-            #nn.Conv2d(int(outChannels), int(outChannels+10), 5),
-            #nn.MaxPool2d(2),
-            #nn.ReLU()
+            
         )
  
         self.classifier = nn.Sequential(
-            nn.Linear(outChannels * 32 * 32, 10), #Input: 28 * 5 * 5
-            #nn.ReLU(),
-            #nn.Linear(int(4732/2), int(4732/4)),
-            #nn.ReLU(),
-            #nn.Linear(int(4732/4), 10)
+            nn.Dropout(p=0.50),
+            nn.BatchNorm1d(outChannels * 32 * 32),
+            nn.Linear(outChannels * 32 * 32, outChannels * 16 * 16),
+            nn.ReLU(),
+            nn.Linear(outChannels * 16 * 16, 10),
+        
         )
         
  
@@ -46,33 +45,42 @@ class MiniAlexNet(nn.Module):
         #ne definiamo due: un "feature extractor", che estrae le feature maps
         #e un "classificatore" che implementa i livelly FC
         self.feature_extractor = nn.Sequential(
-            nn.Conv2d(input_channels,int(outChannels),kernel_size=2,stride=1,padding=0), 
+            nn.Conv2d(input_channels,int(outChannels),kernel_size=2,stride=1,padding=1), 
             nn.MaxPool2d(2),
             nn.ReLU(),
 
             #----
-
-            nn.Conv2d(int(outChannels),int(outChannels)*2,kernel_size=2,stride=1,padding=0), 
+            nn.BatchNorm2d(int(outChannels)),
+            nn.Conv2d(int(outChannels),int(outChannels)*2,kernel_size=2,stride=1,padding=1), 
             nn.MaxPool2d(2),
             nn.ReLU(),
 
             # ---
-
-            nn.Conv2d(int(outChannels)*2,int(outChannels) * 2 * 2,kernel_size=2,stride=1,padding=0), 
+            nn.BatchNorm2d(int(outChannels)*2),
+            nn.Conv2d(int(outChannels)*2,int(outChannels) * 2 * 2,kernel_size=2,stride=1,padding=1), 
             nn.MaxPool2d(2),
             nn.ReLU(),
         )
  
         self.classifier = nn.Sequential(
-
+            #16 = 4096
             nn.Dropout(),
-            nn.Linear(3136, 1568),
+            nn.BatchNorm1d(4096),
+            nn.Linear(4096, int(4096/2)),
             nn.ReLU(),
 
             nn.Dropout(),
-            nn.Linear(1568, 784),
+            nn.BatchNorm1d(int(4096/2)),
+            nn.Linear(int(4096/2), int(4096/4)),
             nn.ReLU(),
-            nn.Linear(784, out_classes)
+
+            nn.Dropout(),
+            nn.BatchNorm1d(int(4096/4)),
+            nn.Linear(int(4096/4), int(4096/8)),
+            nn.ReLU(),
+
+
+            nn.Linear(int(4096/8), out_classes)
         )
         
  

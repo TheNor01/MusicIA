@@ -2,6 +2,7 @@
 import numpy as np
 from torch.utils.data.dataset import Dataset
 from PIL import Image
+from torchvision import transforms
 
 
 genre_dict = {
@@ -17,7 +18,7 @@ genre_dict = {
 "rock" : 9
 }
 
-class ScenesDataset(Dataset):
+class ImagesDataset(Dataset):
     
     def __init__(self,base_path,txt_list,transform=None):
      
@@ -27,7 +28,7 @@ class ScenesDataset(Dataset):
         #sarà una matrice con n righe (numero di immagini) e 2 colonne (path, etichetta)
         self.images = np.loadtxt(txt_list,dtype=str,delimiter=',')
 
-        print("Images loader :"+ str(self.images.size))
+        print("Images loader :"+ str(self.images.size//2))
         #conserviamo il riferimento alla trasformazione da applicare
         self.transform = transform
 
@@ -37,6 +38,14 @@ class ScenesDataset(Dataset):
     
         #carichiamo l'immagine utilizzando PIL
         im = Image.open(self.base_path+"/"+f)
+
+
+        #data augmentation = 0.3%
+        from random import randrange
+        if(randrange(3)==1):
+            #print("AUG: "+self.base_path+"/"+f)
+            transform = transforms.ColorJitter(brightness=(0.5,1.5),contrast=(1),saturation=(0.5,1.5),hue=(-0.1,0.1))
+            im = transform(im)
     
         #se la trasfromazione è definita, applichiamola all'immagine
         if self.transform is not None:
@@ -50,3 +59,5 @@ class ScenesDataset(Dataset):
 
     def __len__(self):
         return len(self.images)
+
+
