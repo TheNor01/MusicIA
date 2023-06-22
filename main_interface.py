@@ -66,6 +66,11 @@ if __name__ == '__main__':
    
     def select_file():
         file_path = filedialog.askopenfilename(defaultextension=".wav",initialdir="./resources/archive/Data/genres_original")
+        if(not file_path.endswith(".wav")):
+            tk.messagebox.showerror(title="ERROR", message= "Not a valid file")
+            return
+
+
         print("File selezionato:", file_path)
         
 
@@ -80,31 +85,18 @@ if __name__ == '__main__':
             #plt.figure(figsize=(12,4))
             #librosa.display.waveshow(data,color="#2B4F72")
 
-
+            S = librosa.feature.melspectrogram(y=data, sr=sr)
             D = np.abs(librosa.stft(data, n_fft=n_fft,  hop_length=hop_length))
-            librosa.display.specshow(D, sr=sr, x_axis='time', y_axis='linear')
+            #librosa.display.specshow(D, sr=sr, x_axis='time', y_axis='linear')
             DB = librosa.amplitude_to_db(D, ref=np.max)
+            S_DB = librosa.amplitude_to_db(S, ref=np.min)
             #plt.colorbar(format='%+2.0f dB')
 
 
-            #S = librosa.feature.melspectrogram(data, sr=sr, n_fft=n_fft, hop_length=hop_length, n_mels=n_mels)
-            #S_DB = librosa.power_to_db(S, ref=np.max)
-            #librosa.display.specshow(S_DB, sr=sr, hop_length=hop_length, x_axis='time', y_axis='mel')
-            #plt.colorbar(format='%+2.0f dB')
-
-            #plt.colorbar();
-            
-            #print(type(data),type(sr))
-            #stft=librosa.stft(data)
-            #stft_db=librosa.amplitude_to_db(abs(stft),ref=np.max)
-            #plt.figure(figsize=(14,6))
-            #librosa.display.specshow(stft_db,sr=sr,x_axis='time',y_axis='hz')
-            
-            #plt.colorbar()
-            #plt.show()
-            #plt.savefig('out.png', bbox_inches='tight', pad_inches=0)
+           
             fig, ax = plt.subplots(1, figsize=(12,8))
-            imgSpec=librosa.display.specshow(DB, sr=sr, hop_length=hop_length, x_axis='time', y_axis='log')
+            #librosa.display.specshow(DB, sr = sr, hop_length = hop_length, x_axis = 'time', y_axis = 'log')
+            librosa.display.specshow(S_DB, sr = sr, hop_length = hop_length, x_axis = 'time', y_axis = 'log')
 
             ax.axes.get_xaxis().set_visible(False)
             ax.axes.get_yaxis().set_visible(False)
@@ -137,6 +129,10 @@ if __name__ == '__main__':
             true_label.insert(0,categoryPath)
             
     def classify():
+
+        if not path_entry.get():
+            tk.messagebox.showerror(title="ERROR", message="PATH EMPTY")
+            return
 
         print("classify: "+ path_entry.get())
         imageToLoad = Image.open("./resources/interface/"+"audio_spectrum.png")
