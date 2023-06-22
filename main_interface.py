@@ -26,17 +26,34 @@ hop_length = 512
 n_mels=128
 globalImage = None
 
+genre_dict = {
+"blues" : 0,
+"classical": 1,
+"country": 2,
+"disco": 3,
+"hiphop": 4,
+"jazz": 5,
+"metal": 6,
+"pop": 7,
+"reggae": 8,
+"rock" : 9
+}
+
+reversedDict = dict((v, k) for k, v in genre_dict.items())
+
+#alert if audio is not a .wav
+
 if __name__ == '__main__':
 
 
     #load model
-    #model = LeNetColor(outChannels=16).to("cpu")
-    model = MiniAlexNet(outChannels=16).to("cpu")
-    model.load_state_dict(torch.load("./resources/archive/stored/models/miniAlex.pth"))
+    model = LeNetColor(outChannels=16).to("cpu")
+    #model = MiniAlexNet(outChannels=16).to("cpu")
+    #model.load_state_dict(torch.load("./resources/archive/stored/models/leNet.pth"))
+    model.load_state_dict(torch.load("./resources/archive/stored/models/leNet.pth"))
     
     print(model)
     
-    model.eval()
 
     def trim(im):
         bg = Image.new(im.mode, im.size, im.getpixel((0,0)))
@@ -97,11 +114,13 @@ if __name__ == '__main__':
             plt.savefig("./resources/interface/"+"audio_spectrum.png",bbox_inches='tight', pad_inches=0)
 
             imageToLoad = Image.open("./resources/interface/"+"audio_spectrum.png")
-            im_trimmed = trim(imageToLoad)
+            imageToLoad = trim(imageToLoad)
 
-            im_trimmed.save("./resources/interface/"+"audio_spectrum.png")
-            im_trimmed = im_trimmed.resize([200,200])
-            img = ImageTk.PhotoImage(im_trimmed)
+            print(imageToLoad)
+
+            imageToLoad.save("./resources/interface/"+"audio_spectrum.png")
+            imageToLoad = imageToLoad.resize([200,200])
+            img = ImageTk.PhotoImage(imageToLoad)
             imagebox.config(image=img)
             imagebox.image = img
             #globalImage = im_trimmed
@@ -119,26 +138,35 @@ if __name__ == '__main__':
             
     def classify():
 
-    
         print("classify: "+ path_entry.get())
         imageToLoad = Image.open("./resources/interface/"+"audio_spectrum.png")
+        new_image = imageToLoad.resize((64, 64))
 
         tf=transforms.Compose([
-                transforms.Resize((64,64)),
                 transforms.ToTensor()
         ])
 
 
-        imageTransformed = tf(imageToLoad)
+        imageTransformed = tf(new_image).unsqueeze(0)
 
         print(imageTransformed.shape)
+        #model.eval()
+        with torch.no_grad():
+            output = model(imageTransformed.to("cpu"))
 
-        output = model(imageTransformed)
-        preds = output.to('cpu').max(1)[1].numpy()
 
-        print(preds)
+        
+        _, predicted_idx = torch.max(output, 1)
+        label = reversedDict[predicted_idx.item()]
 
-        return "x"
+        predicted_label.insert(0,label)
+        print("Classified label:"+label)
+
+    def clear():
+        true_label.delete(0,'end')
+        path_entry.delete(0,'end')
+        predicted_label.delete(0,'end')
+        imagebox.config(image='')
 
     screen.minsize(400,400)
     screen.title("Classify genre")
@@ -152,8 +180,15 @@ if __name__ == '__main__':
     true_entry = tk.Label(screen, text = "true entry", width = "20")
     true_entry.grid(column = 0, row = 5)
 
-    true_label = tk.Entry(screen,textvariable = "", width = "20")
+    true_label = tk.Entry(screen,textvariable = "", width = "20",justify='center')
     true_label.grid(column=0,row=7)
+
+
+    predicted_entry = tk.Label(screen, text = "label classified", width = "40")
+    predicted_entry.grid(column = 0, row = 10)
+
+    predicted_label = tk.Entry(screen,textvariable = "", width = "40",justify='center')
+    predicted_label.grid(column=0,row=20)
 
     filename_audio= tk.StringVar()
 
@@ -164,6 +199,9 @@ if __name__ == '__main__':
 
     classify_button = tk.Button(screen, text="Classify", command=classify)
     classify_button.grid(column=0,row=400)
+
+    clear_button = tk.Button(screen, text="Clear", command=clear)
+    clear_button.grid(column=5)
 
     screen.mainloop()
 

@@ -90,7 +90,7 @@ def test_classifier(model, loader):
     predictions, labels = [], []
     for batch in loader:
         x = batch['image'].to(device)
-        y =batch['label'].to(device)
+        y = batch['label'].to(device)
         output = model(x)
         preds = output.to('cpu').max(1)[1].numpy()
         labs = y.to('cpu').numpy()

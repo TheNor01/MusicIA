@@ -22,7 +22,7 @@ class LeNetColor(nn.Module):
  
         self.classifier = nn.Sequential(
             nn.Dropout(p=0.50),
-            nn.BatchNorm1d(outChannels * 32 * 32),
+            #nn.BatchNorm1d(outChannels * 32 * 32),
             nn.Linear(outChannels * 32 * 32, outChannels * 16 * 16),
             nn.ReLU(),
             nn.Linear(outChannels * 16 * 16, 10),

@@ -210,24 +210,27 @@ if __name__ == '__main__':
     ts = calendar.timegm(current_GMT)
     print("Current timestamp:", ts)
 
-    """
-    lenetModel = LeNetColor(sizeInput=size,outChannels=16)
+    
+    lenetModel = LeNetColor(outChannels=16)
 
 
     for i_batch, sample_batched in enumerate(train_dataset):
         print(i_batch, sample_batched['image'].size())
 
 
-    lenet_mnist = train_classifier(lenetModel, train_dataset,test_dataset, exp_name=str(ts)+"_color", epochs = 400,lr=0.01,momentum=0.9)
+    lenet_mnist = train_classifier(lenetModel, train_dataset,test_dataset, exp_name=str(ts)+"_color", epochs = 200,lr=0.001,momentum=0.5)
 
 
-    torch.save(lenet_mnist.state_dict(), "./resources/archive/stored/models/"+"leNet.pth")
+    torch.save(lenetModel.state_dict(), "./resources/archive/stored/models/"+"leNet.pth")
 
     lenet_train_predictions, cifar100_labels_train = test_classifier(lenet_mnist,train_dataset)
     lenet_test_predictions, cifar100_labels_test = test_classifier(lenet_mnist,test_dataset)
 
     print("Accuracy train LeNetColor: %0.2f" % accuracy_score(cifar100_labels_train,lenet_train_predictions))
     print("Accuracy test LeNetColor: %0.2f" % accuracy_score(cifar100_labels_test,lenet_test_predictions))
+
+    exit()
+
 
     """
     
@@ -249,4 +252,4 @@ if __name__ == '__main__':
     confusion_matrix(alex_labels_test, alex_test_predictions)
     #what if we increase samples training? overfittin is here
     
-
+    """
