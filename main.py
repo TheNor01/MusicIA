@@ -158,6 +158,8 @@ if __name__ == '__main__':
 
 
     print("Medie",m)
+
+    print(type(m))
     print("Dev.Std.",s)
 
 

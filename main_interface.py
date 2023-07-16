@@ -118,7 +118,7 @@ if __name__ == '__main__':
             print(imageToLoad)
 
             imageToLoad.save("./resources/interface/"+"audio_spectrum.png")
-            imageToLoad = imageToLoad.resize([200,200])
+            imageToLoad = imageToLoad.resize([64,64])
             img = ImageTk.PhotoImage(imageToLoad)
             imagebox.config(image=img)
             imagebox.image = img
@@ -146,9 +146,17 @@ if __name__ == '__main__':
         imageToLoad = Image.open("./resources/interface/"+"audio_spectrum.png")
         new_image = imageToLoad.resize((64, 64))
 
+
+        #Medie [0.36204   0.14410875 0.30086741]
+        #Dev.Std. [0.29978628 0.14587127 0.18268844]
+
+        m = np.array([0.36204 , 0.14410875, 0.30086741])
+        s = np.array([0.29978628 , 0.14587127, 0.18268844])
+
         tf=transforms.Compose([
-                transforms.ToTensor()
-        ])
+                transforms.ToTensor(),
+                transforms.Normalize(m,s)
+            ])
 
 
         imageTransformed = tf(new_image).unsqueeze(0)
