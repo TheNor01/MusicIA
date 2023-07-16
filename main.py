@@ -17,7 +17,7 @@ from bin.code.metrics_eval import train_classifier,test_classifier
 from sklearn.metrics import accuracy_score
 import splitfolders
 import calendar
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix,ConfusionMatrixDisplay
 import time
 
 
@@ -52,18 +52,18 @@ if __name__ == '__main__':
         return trim(im.convert('RGB'))
 
 
-
+    #rootPathData = "./resources/archive/Data/images_original/"
+    rootPathData = "./resources/archive/Data/images_newset/"
+    transformedData = "./resources/archive/Data/images_transformed_"+str(size)
+    #transformedData = "./resources/archive/Data/images_new_transformed_"+str(size)
 
     if(doPreprocess==1):
 
 
-        rootPathData = "./resources/archive/Data/images_original/"
-        transformedData = "./resources/archive/Data/images_transformed_"+str(size)
-
         #if os.path.exists(songs_train_test+"train.txt"):
         #    os.remove(songs_train_test+"train.txt")
             
-        fullDs = open(songs_train_test+"fullDs.txt", "a")  # append mode
+        fullDs = open(songs_train_test+"fullDs.txt", "w+")  # append mode
 
 
         #Resize according to size 
@@ -110,7 +110,9 @@ if __name__ == '__main__':
                 tensorsLabels.append(im_ts)
                 categoryLabels.append(category)
 
-                fullDs.write(category+"/"+file+","+category+"\n")
+
+                if(category != ""):
+                    fullDs.write(category+"/"+file+","+category+"\n")
 
         fullDs.close()
         dfSongs = pd.DataFrame(list(zip(fileLabels, tensorsLabels,categoryLabels)),
@@ -121,10 +123,10 @@ if __name__ == '__main__':
 
         print(dfSongs)
 
-        splitfolders.ratio("./resources/archive/Data/images_transformed_"+str(size), output="./resources/archive/Data/",seed=1337, ratio=(.7, .2, .1), group_prefix=None, move=False) # default values
+        splitfolders.ratio(transformedData, output="./resources/archive/Data/",seed=1337, ratio=(.7, .2, .1), group_prefix=None, move=False) # default values
 
 
-    dataset = ImagesDataset('./resources/archive/Data/images_transformed_'+str(size),'./resources/archive/Data/songs_train_test/fullDs.txt',transform=transforms.ToTensor())
+    dataset = ImagesDataset(transformedData,'./resources/archive/Data/songs_train_test/fullDs.txt',transform=transforms.ToTensor())
 
     sample = dataset[0]
     print(sample['image'].shape)
@@ -201,8 +203,8 @@ if __name__ == '__main__':
     print(dataset_test[0]['label'])
 
 
-    train_dataset = DataLoader(dataset_train,batch_size=32,num_workers=0,shuffle=True)
-    test_dataset = DataLoader(dataset_test,batch_size=32,num_workers=0,shuffle=2)
+    train_dataset = DataLoader(dataset_train,batch_size=64,num_workers=0,shuffle=True)
+    test_dataset = DataLoader(dataset_test,batch_size=64,num_workers=0,shuffle=2)
 
     current_GMT = time.gmtime()
 
@@ -210,46 +212,56 @@ if __name__ == '__main__':
     ts = calendar.timegm(current_GMT)
     print("Current timestamp:", ts)
 
-    
-    lenetModel = LeNetColor(outChannels=16)
-
-
     for i_batch, sample_batched in enumerate(train_dataset):
         print(i_batch, sample_batched['image'].size())
 
+    lenetModel = LeNetColor(outChannels=16)
+    lenetModel.load_state_dict(torch.load("./resources/archive/stored/models/leNet.pth"))
+    lenetModel.eval()
 
+    lenet_train_predictions, labels_train = test_classifier(lenetModel,train_dataset)
+    lenet_test_predictions, labels_test = test_classifier(lenetModel,test_dataset)
+
+    """
+    lenetModel = LeNetColor(outChannels=16)
     lenet_mnist = train_classifier(lenetModel, train_dataset,test_dataset, exp_name=str(ts)+"_color", epochs = 200,lr=0.001,momentum=0.5)
 
 
     torch.save(lenetModel.state_dict(), "./resources/archive/stored/models/"+"leNet.pth")
 
-    lenet_train_predictions, cifar100_labels_train = test_classifier(lenet_mnist,train_dataset)
-    lenet_test_predictions, cifar100_labels_test = test_classifier(lenet_mnist,test_dataset)
+    lenet_train_predictions, labels_train = test_classifier(lenet_mnist,train_dataset)
+    lenet_test_predictions, labels_test = test_classifier(lenet_mnist,test_dataset)
 
-    print("Accuracy train LeNetColor: %0.2f" % accuracy_score(cifar100_labels_train,lenet_train_predictions))
-    print("Accuracy test LeNetColor: %0.2f" % accuracy_score(cifar100_labels_test,lenet_test_predictions))
-
-    exit()
-
-
+    print("Accuracy train LeNetColor: %0.2f" % accuracy_score(labels_train,lenet_train_predictions))
+    print("Accuracy test LeNetColor: %0.2f" % accuracy_score(labels_test,lenet_test_predictions))
     """
     
+
+    #-------------
+
     #improve cnn
     miniAlex = MiniAlexNet(outChannels=16)
-    alex_mnist = train_classifier(miniAlex, train_dataset,test_dataset, exp_name=str(ts)+"_alex", epochs = 400,lr=0.001)
+    #alex_mnist = train_classifier(miniAlex, train_dataset,test_dataset, exp_name=str(ts)+"_alex", epochs = 400,lr=0.001)
+    #torch.save(alex_mnist.state_dict(), "./resources/archive/stored/models/"+"miniAlex.pth")
+    
+    #alex_train_predictions, alex_labels_train = test_classifier(alex_mnist,train_dataset)
+    #alex_test_predictions, alex_labels_test = test_classifier(alex_mnist,test_dataset)
 
+    #print("Accuracy train Alex: %0.2f" % accuracy_score(alex_labels_train,alex_train_predictions))
+    #print("Accuracy train Alex: %0.2f" % accuracy_score(alex_labels_test,alex_test_predictions))
 
-    torch.save(alex_mnist.state_dict(), "./resources/archive/stored/models/"+"miniAlex.pth")
+    #-------------
 
+    
+    #CM EVAL
+    #alex_mnist = MiniAlexNet(outChannels=16).to("cpu")
+    #alex_mnist.load_state_dict(torch.load("./resources/archive/stored/models/miniAlex.pth"))
+    #alex_mnist.eval()
+    cm = confusion_matrix(labels_test, lenet_test_predictions)
+    target_names = ('blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock')
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm,display_labels=target_names)
+    disp.plot()
+    plt.show()
 
-    alex_train_predictions, alex_labels_train = test_classifier(alex_mnist,train_dataset)
-    alex_test_predictions, alex_labels_test = test_classifier(alex_mnist,test_dataset)
-
-
-    print("Accuracy train Alex: %0.2f" % accuracy_score(alex_labels_train,alex_train_predictions))
-    print("Accuracy train Alex: %0.2f" % accuracy_score(alex_labels_test,alex_test_predictions))
-
-    confusion_matrix(alex_labels_test, alex_test_predictions)
     #what if we increase samples training? overfittin is here
     
-    """

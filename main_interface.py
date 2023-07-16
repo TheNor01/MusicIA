@@ -48,10 +48,14 @@ if __name__ == '__main__':
 
     #load model
     model = LeNetColor(outChannels=16).to("cpu")
-    #model = MiniAlexNet(outChannels=16).to("cpu")
-    #model.load_state_dict(torch.load("./resources/archive/stored/models/leNet.pth"))
     model.load_state_dict(torch.load("./resources/archive/stored/models/leNet.pth"))
+    model.eval()
     
+    #----
+    #model = MiniAlexNet(outChannels=16).to("cpu")
+    #model.load_state_dict(torch.load("./resources/archive/stored/models/miniAlex.pth"))
+    #model.eval()
+
     print(model)
     
 
@@ -65,6 +69,8 @@ if __name__ == '__main__':
         return trim(im.convert('RGB'))
    
     def select_file():
+
+        true_label.delete(0,'end')
         file_path = filedialog.askopenfilename(defaultextension=".wav",initialdir="./resources/archive/Data/genres_original")
         if(not file_path.endswith(".wav")):
             tk.messagebox.showerror(title="ERROR", message= "Not a valid file")
@@ -82,19 +88,20 @@ if __name__ == '__main__':
             print("librosa load")
             audio_recording=file_path
             data,sr=librosa.load(audio_recording)
+            data, _ = librosa.effects.trim(data)
             #plt.figure(figsize=(12,4))
             #librosa.display.waveshow(data,color="#2B4F72")
 
             S = librosa.feature.melspectrogram(y=data, sr=sr)
-            D = np.abs(librosa.stft(data, n_fft=n_fft,  hop_length=hop_length))
+            #D = np.abs(librosa.stft(data, n_fft=n_fft,  hop_length=hop_length))
             #librosa.display.specshow(D, sr=sr, x_axis='time', y_axis='linear')
-            DB = librosa.amplitude_to_db(D, ref=np.max)
-            S_DB = librosa.amplitude_to_db(S, ref=np.min)
+            #DB = librosa.amplitude_to_db(D, ref=np.max)
+            S_DB = librosa.amplitude_to_db(S, ref=np.max)
             #plt.colorbar(format='%+2.0f dB')
 
 
            
-            fig, ax = plt.subplots(1, figsize=(12,8))
+            fig, ax = plt.subplots(1, figsize=(16,6))
             #librosa.display.specshow(DB, sr = sr, hop_length = hop_length, x_axis = 'time', y_axis = 'log')
             librosa.display.specshow(S_DB, sr = sr, hop_length = hop_length, x_axis = 'time', y_axis = 'log')
 
@@ -130,6 +137,7 @@ if __name__ == '__main__':
             
     def classify():
 
+        predicted_label.delete(0,'end')
         if not path_entry.get():
             tk.messagebox.showerror(title="ERROR", message="PATH EMPTY")
             return

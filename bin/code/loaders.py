@@ -26,7 +26,9 @@ class ImagesDataset(Dataset):
         self.base_path=base_path
         #carichiamo la lista dei file
         #sarà una matrice con n righe (numero di immagini) e 2 colonne (path, etichetta)
-        self.images = np.loadtxt(txt_list,dtype=str,delimiter=',')
+        
+
+        self.images = np.loadtxt(txt_list,dtype=str,delimiter=',',comments="#")
 
         print("Images loader :"+ str(self.images.size//2))
         #conserviamo il riferimento alla trasformazione da applicare
@@ -35,6 +37,8 @@ class ImagesDataset(Dataset):
     def __getitem__(self, index):
         #recuperiamo il path dell'immagine di indice index e la relativa etichetta
         f,c = self.images[index]
+
+        #print("c:"+c)
     
         #carichiamo l'immagine utilizzando PIL
         im = Image.open(self.base_path+"/"+f)
