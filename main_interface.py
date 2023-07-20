@@ -39,6 +39,12 @@ genre_dict = {
 "rock" : 9
 }
 
+
+listbox = tk.Listbox(screen, selectmode=tk.SINGLE)
+classifierNames = ['alexNet', 'lenetColor']
+for classifier in classifierNames:
+    listbox.insert(0, classifier)
+
 reversedDict = dict((v, k) for k, v in genre_dict.items())
 
 #alert if audio is not a .wav
@@ -47,17 +53,17 @@ if __name__ == '__main__':
 
 
     #load model
-    model = LeNetColor(outChannels=16).to("cpu")
-    model.load_state_dict(torch.load("./resources/archive/stored/models/leNet.pth"))
-    model.eval()
+    modelLenet = LeNetColor(outChannels=16).to("cpu")
+    modelLenet.load_state_dict(torch.load("./resources/archive/stored/models/leNet.pth"))
+    modelLenet.eval()
     
-    #----
-    #model = MiniAlexNet(outChannels=16).to("cpu")
-    #model.load_state_dict(torch.load("./resources/archive/stored/models/miniAlex.pth"))
-    #model.eval()
+    
+    modelAlex = MiniAlexNet(outChannels=16).to("cpu")
+    modelAlex.load_state_dict(torch.load("./resources/archive/stored/models/miniAlex.pth"))
+    modelAlex.eval()
 
-    print(model)
     
+    model = None
 
     def trim(im):
         bg = Image.new(im.mode, im.size, im.getpixel((0,0)))
@@ -137,6 +143,26 @@ if __name__ == '__main__':
             
     def classify():
 
+        choosenModel=None
+
+        valueModel = [listbox.get(idx) for idx in listbox.curselection()]
+        if(len(valueModel)==0):
+             model = None
+        else:
+            choosenModel = valueModel[0]
+
+        if(choosenModel=="alexNet"):
+            model = modelAlex
+        elif(choosenModel=="lenetColor"):
+            model = modelLenet
+        else:
+            model = None
+
+
+        if(model is None):
+            tk.messagebox.showerror(title="ERROR", message="CHOOSE ONE MODEL")
+            return
+
         predicted_label.delete(0,'end')
         if not path_entry.get():
             tk.messagebox.showerror(title="ERROR", message="PATH EMPTY")
@@ -215,15 +241,12 @@ if __name__ == '__main__':
     clear_button = tk.Button(screen, text="Clear", command=clear)
     clear_button.grid(column=5)
 
+    listbox.grid(row=400,column=5)
+
+
+
     screen.mainloop()
 
-    
-
-
-    """
-
-   
-    """
 
 
     

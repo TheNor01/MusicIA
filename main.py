@@ -217,14 +217,15 @@ if __name__ == '__main__':
     for i_batch, sample_batched in enumerate(train_dataset):
         print(i_batch, sample_batched['image'].size())
 
+    """
     lenetModel = LeNetColor(outChannels=16)
     lenetModel.load_state_dict(torch.load("./resources/archive/stored/models/leNet.pth"))
     lenetModel.eval()
 
     lenet_train_predictions, labels_train = test_classifier(lenetModel,train_dataset)
     lenet_test_predictions, labels_test = test_classifier(lenetModel,test_dataset)
-
     """
+
     lenetModel = LeNetColor(outChannels=16)
     lenet_mnist = train_classifier(lenetModel, train_dataset,test_dataset, exp_name=str(ts)+"_color", epochs = 200,lr=0.001,momentum=0.5)
 
@@ -236,21 +237,20 @@ if __name__ == '__main__':
 
     print("Accuracy train LeNetColor: %0.2f" % accuracy_score(labels_train,lenet_train_predictions))
     print("Accuracy test LeNetColor: %0.2f" % accuracy_score(labels_test,lenet_test_predictions))
-    """
     
 
     #-------------
 
     #improve cnn
     miniAlex = MiniAlexNet(outChannels=16)
-    #alex_mnist = train_classifier(miniAlex, train_dataset,test_dataset, exp_name=str(ts)+"_alex", epochs = 400,lr=0.001)
-    #torch.save(alex_mnist.state_dict(), "./resources/archive/stored/models/"+"miniAlex.pth")
+    alex_mnist = train_classifier(miniAlex, train_dataset,test_dataset, exp_name=str(ts)+"_alex", epochs = 400,lr=0.001)
+    torch.save(alex_mnist.state_dict(), "./resources/archive/stored/models/"+"miniAlex.pth")
     
-    #alex_train_predictions, alex_labels_train = test_classifier(alex_mnist,train_dataset)
-    #alex_test_predictions, alex_labels_test = test_classifier(alex_mnist,test_dataset)
+    alex_train_predictions, alex_labels_train = test_classifier(alex_mnist,train_dataset)
+    alex_test_predictions, alex_labels_test = test_classifier(alex_mnist,test_dataset)
 
-    #print("Accuracy train Alex: %0.2f" % accuracy_score(alex_labels_train,alex_train_predictions))
-    #print("Accuracy train Alex: %0.2f" % accuracy_score(alex_labels_test,alex_test_predictions))
+    print("Accuracy train Alex: %0.2f" % accuracy_score(alex_labels_train,alex_train_predictions))
+    print("Accuracy train Alex: %0.2f" % accuracy_score(alex_labels_test,alex_test_predictions))
 
     #-------------
 
