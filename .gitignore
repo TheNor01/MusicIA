@@ -165,7 +165,6 @@ cython_debug/
 ./resources/archive/Data/genres_original/*/*
 resources/archive/Data/genres_original/*/*.wav
 resources/archive/Data/images_transformed_*/*
-resources/archive/stored/models/*.pth
 resources/archive/Data/*/*/*.png
 logs/metrics/*/*
 resources/archive/Data/songs_train_test/*.txt
